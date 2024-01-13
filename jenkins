@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ExecuteAction',
+            choices: ['build', 'destroy'],
+            description: "Which TF action to take"
+        )
+    }
+
+    stages {
+        stage('Terraform init') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init'
+                }    
+            }
+        }
+        stage('Terraform plan') {
+            when { expression { params.ExecuteAction == 'build' } }
+            steps {
+                dir('terraform') {
+                    sh 'terraform plan'
+                }
+            }
+        }
+        stage('Terraform apply') {
+            when { expression { params.ExecuteAction == 'build' } }
+            steps {
+                dir('terraform') {
+                    sh 'terraform apply --auto-approve'
+                }
+            }
+        }
+        stage('Catch TF outputs') {
+            when { expression { params.ExecuteAction == 'build' } }
+            steps {
+                dir('terraform') {
+                    sh './handle_outputs.sh'
+                }
+            }
+        }
+        stage('Execute Ansible') {
+            when { expression { params.ExecuteAction == 'build' } }
+            steps {
+                dir('ansible') {
+                    sh 'ansible-playbook ./playbooks/wordpress.yml'
+                }
+            }
+        }
+        stage('Terraform destroy') {
+            when { expression { params.ExecuteAction == 'destroy' } }
+            steps {
+                dir('terraform') {
+                    sh 'terraform destroy --auto-approve'
+                }
+            }
+        }
+    }
+}
