@@ -1,0 +1,16 @@
+---
+# defaults file for wordpress
+wordpress_packages:
+  - httpd
+  - mysql
+  - python-pip
+  - gcc
+  - mysql-devel
+  - php
+  - php-mysqlnd
+  - php-mbstring
+wordpress_database_host: 'terraform-20240112001132169500000001.cqaz13f9nnem.us-east-1.rds.amazonaws.com' 
+wordpress_database: 'wordpress'
+wordpress_user: 'admin'
+wordpress_password: "{{ lookup('amazon.aws.aws_secret', 'rds_secret') | from_json | json_query('rdssecret') }}" 
+wordpress_configuration: '/var/www/html/wp-config.php'
